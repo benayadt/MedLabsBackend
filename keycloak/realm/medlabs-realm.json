@@ -23,14 +23,16 @@
       "clientId": "medlabs-web",
       "name": "MedLabs Web",
       "enabled": true,
-      "publicClient": true,
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "medlabs-web-dev-secret",
       "standardFlowEnabled": true,
       "directAccessGrantsEnabled": false,
       "redirectUris": [
-        "http://localhost:5173/*"
+        "http://localhost:3000/api/auth/callback/keycloak"
       ],
       "webOrigins": [
-        "http://localhost:5173"
+        "http://localhost:3000"
       ]
     }
   ]

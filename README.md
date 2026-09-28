@@ -65,14 +65,22 @@ also validates JWTs as a defense-in-depth measure.
 
 For a browser frontend running locally, configure its API base URL as
 `http://localhost:8080` and its Keycloak authority as `http://localhost:8081/realms/medlabs`.
-The default gateway CORS policy permits `http://localhost:5173`; override it through
-the `CORS_ALLOWED_ORIGINS` environment variable for other frontend origins.
+The default gateway CORS policy permits `http://localhost:5173` and `http://localhost:3000`;
+override it through the `CORS_ALLOWED_ORIGINS` environment variable for other frontend origins.
 
-On its first start, Keycloak imports the `medlabs` realm, the public
+On its first start, Keycloak imports the `medlabs` realm, the confidential
 `medlabs-web` OIDC client, and the `ADMIN`, `PATHOLOGIST`, and `LAB_TECHNICIAN`
 realm roles. Create frontend users in this realm and assign their realm roles in
 the Keycloak admin console. The gateway restricts `/api/admin/**` to `ADMIN`;
 other API paths require a valid user token.
+
+The `medlabs-web` client is confidential (has a client secret) because it is
+used by the [MedLabs Next.js frontend](https://github.com/benayadt/MedLabs)'s
+server-side NextAuth.js integration, which can safely hold a secret. For local
+development its secret is the fixed dev-only value `medlabs-web-dev-secret`
+defined in `keycloak/realm/medlabs-realm.json`; change it before any shared or
+production use. See that repository's `docs/webapp/keycloak-setup.md` for the
+frontend-side environment variables required to use it.
 
 ## Frontend
 
