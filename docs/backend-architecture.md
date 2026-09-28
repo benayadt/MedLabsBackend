@@ -14,7 +14,15 @@ MedLabs needs a backend that can run either in a local lab environment or in AWS
 
 ## High-level components
 
-### 1. Gateway service
+### 1. Frontend hosting (Nginx)
+
+Nginx serves the built single-page application as static files and
+reverse-proxies `/api/*` to the gateway from the same origin. This is the
+only public entry point in an on-prem deployment — no CORS handling is
+required in production because the browser sees a single origin for both
+the page and the API.
+
+### 2. Gateway service
 
 The Spring Gateway is the public entry point for the web frontend. It:
 
@@ -25,7 +33,7 @@ The Spring Gateway is the public entry point for the web frontend. It:
 
 The API service is not exposed directly outside the container network.
 
-### 2. API service
+### 3. API service
 
 The main backend service exposes REST endpoints for:
 
@@ -38,7 +46,7 @@ The main backend service exposes REST endpoints for:
 
 Responsible for the synchronous path of the application.
 
-### 3. Background worker
+### 4. Background worker
 
 Processes asynchronous jobs such as:
 
@@ -49,7 +57,7 @@ Processes asynchronous jobs such as:
 
 This service should be loosely coupled from the API to avoid blocking user requests.
 
-### 4. Database layer
+### 5. Database layer
 
 Use PostgreSQL as the primary transactional database.
 
@@ -62,7 +70,7 @@ Primary domains include:
 - audit events
 - metadata and document references
 
-### 5. Object storage
+### 6. Object storage
 
 Use object storage for:
 
@@ -73,7 +81,7 @@ Use object storage for:
 
 For on-prem deployment, MinIO is recommended. For AWS, S3 is the target service.
 
-### 6. Messaging layer
+### 7. Messaging layer
 
 Use RabbitMQ locally or SQS in AWS for asynchronous communication between the API and worker services. This allows the application to remain decoupled and improves reliability for jobs that do not need user interaction.
 
@@ -83,6 +91,7 @@ Use RabbitMQ locally or SQS in AWS for asynchronous communication between the AP
 
 A single VM or small server may host:
 
+- Nginx/web container
 - API container
 - Gateway container
 - Worker container

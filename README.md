@@ -32,6 +32,9 @@ Why Spring Boot:
 - `src/main/resources` – configuration files
 - `src/test/java` – tests
 - `docs/` – architecture notes and ADRs
+- `gateway/` – Spring Cloud Gateway (authn/authz edge service)
+- `frontend/` – placeholder SPA + Nginx static hosting/reverse proxy
+- `keycloak/realm/` – imported realm definition for local development
 - `docker-compose.yml` – local on-prem environment
 - `Dockerfile` – container definition
 
@@ -49,6 +52,7 @@ docker compose up --build
 ```
 
 This starts:
+- Nginx at `http://localhost:8000`, serving the built frontend and reverse-proxying `/api/*` to the gateway
 - the Spring Gateway at `http://localhost:8080`
 - the API service, available only through the gateway
 - PostgreSQL
@@ -69,6 +73,30 @@ On its first start, Keycloak imports the `medlabs` realm, the public
 realm roles. Create frontend users in this realm and assign their realm roles in
 the Keycloak admin console. The gateway restricts `/api/admin/**` to `ADMIN`;
 other API paths require a valid user token.
+
+## Frontend
+
+`frontend/` is a minimal placeholder single-page application (plain Vite +
+vanilla JS). It demonstrates the intended production topology rather than
+being a real product frontend:
+
+- `npm run build` compiles the SPA into static files (`dist/`) — no
+  JavaScript runtime is needed to serve them.
+- The `web` Docker Compose service builds those static files and serves them
+  with Nginx, which also reverse-proxies `/api/*` to the `gateway` service on
+  the same origin. This is why the browser never needs CORS in production —
+  the page and the API appear to come from one origin.
+- For local frontend development without Docker, run `npm install && npm run
+  dev` inside `frontend/`. The Vite dev server (`http://localhost:5173`)
+  proxies `/api/*` to `http://localhost:8080` (the gateway), matching the
+  gateway's default `CORS_ALLOWED_ORIGINS`.
+- A real login flow (Authorization Code + PKCE against Keycloak) is not
+  implemented in this placeholder; see `frontend/index.html` for where that
+  would be added.
+
+For a dedicated on-prem server, replace the `8000:80` port mapping with
+`80:80`/`443:443` (with TLS termination in Nginx or a load balancer in front
+of it) so the SPA and API are reachable at the server's standard address.
 
 ## Deployment strategy
 
