@@ -14,7 +14,18 @@ MedLabs needs a backend that can run either in a local lab environment or in AWS
 
 ## High-level components
 
-### 1. API service
+### 1. Gateway service
+
+The Spring Gateway is the public entry point for the web frontend. It:
+
+- validates Keycloak-issued JWTs
+- enforces route-level authorization from Keycloak realm roles
+- forwards authorized API requests to the API service
+- applies the browser CORS policy
+
+The API service is not exposed directly outside the container network.
+
+### 2. API service
 
 The main backend service exposes REST endpoints for:
 
@@ -27,7 +38,7 @@ The main backend service exposes REST endpoints for:
 
 Responsible for the synchronous path of the application.
 
-### 2. Background worker
+### 3. Background worker
 
 Processes asynchronous jobs such as:
 
@@ -38,7 +49,7 @@ Processes asynchronous jobs such as:
 
 This service should be loosely coupled from the API to avoid blocking user requests.
 
-### 3. Database layer
+### 4. Database layer
 
 Use PostgreSQL as the primary transactional database.
 
@@ -51,7 +62,7 @@ Primary domains include:
 - audit events
 - metadata and document references
 
-### 4. Object storage
+### 5. Object storage
 
 Use object storage for:
 
@@ -62,7 +73,7 @@ Use object storage for:
 
 For on-prem deployment, MinIO is recommended. For AWS, S3 is the target service.
 
-### 5. Messaging layer
+### 6. Messaging layer
 
 Use RabbitMQ locally or SQS in AWS for asynchronous communication between the API and worker services. This allows the application to remain decoupled and improves reliability for jobs that do not need user interaction.
 
@@ -73,6 +84,7 @@ Use RabbitMQ locally or SQS in AWS for asynchronous communication between the AP
 A single VM or small server may host:
 
 - API container
+- Gateway container
 - Worker container
 - PostgreSQL container
 - MinIO container

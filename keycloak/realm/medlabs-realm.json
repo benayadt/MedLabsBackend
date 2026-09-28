@@ -1,0 +1,37 @@
+{
+  "realm": "medlabs",
+  "enabled": true,
+  "displayName": "MedLabs",
+  "roles": {
+    "realm": [
+      {
+        "name": "ADMIN",
+        "description": "MedLabs administrators"
+      },
+      {
+        "name": "PATHOLOGIST",
+        "description": "Pathologists who review and approve reports"
+      },
+      {
+        "name": "LAB_TECHNICIAN",
+        "description": "Laboratory technicians who manage biopsy workflows"
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "medlabs-web",
+      "name": "MedLabs Web",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": [
+        "http://localhost:5173/*"
+      ],
+      "webOrigins": [
+        "http://localhost:5173"
+      ]
+    }
+  ]
+}

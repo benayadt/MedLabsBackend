@@ -49,9 +49,26 @@ docker compose up --build
 ```
 
 This starts:
-- the API service
+- the Spring Gateway at `http://localhost:8080`
+- the API service, available only through the gateway
 - PostgreSQL
 - Keycloak for identity/OIDC
+
+The gateway validates Keycloak JWTs and applies route authorization before forwarding
+requests to the API. `/api/health` is public; `/api/admin/**` requires the Keycloak
+realm role `ADMIN`; all other `/api/**` routes require an authenticated user. The API
+also validates JWTs as a defense-in-depth measure.
+
+For a browser frontend running locally, configure its API base URL as
+`http://localhost:8080` and its Keycloak authority as `http://localhost:8081/realms/medlabs`.
+The default gateway CORS policy permits `http://localhost:5173`; override it through
+the `CORS_ALLOWED_ORIGINS` environment variable for other frontend origins.
+
+On its first start, Keycloak imports the `medlabs` realm, the public
+`medlabs-web` OIDC client, and the `ADMIN`, `PATHOLOGIST`, and `LAB_TECHNICIAN`
+realm roles. Create frontend users in this realm and assign their realm roles in
+the Keycloak admin console. The gateway restricts `/api/admin/**` to `ADMIN`;
+other API paths require a valid user token.
 
 ## Deployment strategy
 
