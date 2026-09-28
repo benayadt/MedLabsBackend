@@ -7,9 +7,17 @@ services:
       dockerfile: Dockerfile
     container_name: medlabs-web
     ports:
-      - "8000:80"
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8080
+      KEYCLOAK_ISSUER: http://keycloak:8081/realms/medlabs
+      KEYCLOAK_CLIENT_ID: medlabs-web
+      KEYCLOAK_CLIENT_SECRET: medlabs-web-dev-secret
+      NEXTAUTH_URL: http://localhost:3000
+      NEXTAUTH_SECRET: dev-secret-change-in-production
     depends_on:
       - gateway
+      - keycloak
     restart: unless-stopped
 
   gateway:

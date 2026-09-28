@@ -1,16 +1,35 @@
-# Stage 1: build the static SPA bundle. This stage only runs during image
-# build; no Node.js runs in production.
-FROM node:20-alpine AS build
+# Multi-stage build for Next.js frontend
+FROM node:20-alpine AS builder
 WORKDIR /app
-COPY package*.json ./
+
+# Copy package files
+COPY package.json package-lock.json ./
+
+# Install dependencies
 RUN npm ci
+
+# Copy source
 COPY . .
+
+# Build Next.js app
 RUN npm run build
 
-# Stage 2: serve the built files with Nginx. This is the only thing that
-# actually runs at container start — a plain static file server plus a
-# reverse proxy to the gateway.
-FROM nginx:1.27-alpine
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-COPY --from=build /app/dist /usr/share/nginx/html
-EXPOSE 80
+# Runtime stage
+FROM node:20-alpine
+WORKDIR /app
+
+# Copy package files for runtime dependencies
+COPY package.json package-lock.json ./
+
+# Install production dependencies only
+RUN npm ci --omit=dev
+
+# Copy built app from builder
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/public ./public
+
+# Expose port
+EXPOSE 3000
+
+# Start Next.js
+CMD ["npm", "run", "start"]
