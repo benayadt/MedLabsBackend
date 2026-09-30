@@ -3,25 +3,40 @@ import KeycloakProvider from 'next-auth/providers/keycloak';
 
 import { decodeJwtPayload, extractRealmRoles } from './jwt';
 
-// Authenticates against the MedLabs Keycloak realm through the gateway's
-// identity provider (see MedLabsBackend's docker-compose.yml and
-// keycloak/realm/medlabs-realm.json). Requires these environment variables
-// at runtime (see README for local values):
-//   KEYCLOAK_ISSUER=http://localhost:8081/realms/medlabs
-//   KEYCLOAK_CLIENT_ID=medlabs-web
-//   KEYCLOAK_CLIENT_SECRET=<realm client secret>
-//   NEXTAUTH_URL=http://localhost:3000
-//   NEXTAUTH_SECRET=<random local dev value>
+// Browser-facing URLs (localhost for the browser to resolve)
+const browserUrl = 'http://localhost:8081/realms/medlabs';
+// Server-side URLs (internal Docker hostname)
+const serverUrl = 'http://keycloak:8081/realms/medlabs';
+
 export const authOptions: AuthOptions = {
   providers: [
     KeycloakProvider({
-      clientId: process.env.KEYCLOAK_CLIENT_ID ?? '',
-      clientSecret: process.env.KEYCLOAK_CLIENT_SECRET ?? '',
-      issuer: process.env.KEYCLOAK_ISSUER,
+      clientId: process.env.KEYCLOAK_CLIENT_ID ?? 'medlabs-web',
+      clientSecret: process.env.KEYCLOAK_CLIENT_SECRET ?? 'medlabs-web-dev-secret',
+      issuer: browserUrl,
+      // Disable discovery, use explicit endpoints
+      wellKnown: undefined,
+      // Authorization: browser redirect (use localhost)
+      authorization: {
+        url: `${browserUrl}/protocol/openid-connect/auth`,
+        params: {
+          scope: 'openid email profile roles',
+        },
+      },
+      // Token: server-side call (use internal Docker hostname)
+      token: {
+        url: `${serverUrl}/protocol/openid-connect/token`,
+      },
+      // Userinfo: server-side call (use internal Docker hostname)
+      userinfo: {
+        url: `${serverUrl}/protocol/openid-connect/userinfo`,
+      },
+      jwks_endpoint: `${serverUrl}/protocol/openid-connect/certs`,
     }),
   ],
   session: {
     strategy: 'jwt',
+    maxAge: 30 * 24 * 60 * 60,
   },
   pages: {
     signIn: '/login',
@@ -31,8 +46,6 @@ export const authOptions: AuthOptions = {
       if (account?.access_token) {
         token.accessToken = account.access_token;
       }
-      // Keycloak's default "roles" client scope includes realm_access in
-      // both the ID token and access token, so either can be decoded here.
       if (account?.id_token) {
         token.roles = extractRealmRoles(decodeJwtPayload(account.id_token));
       }
@@ -43,4 +56,5 @@ export const authOptions: AuthOptions = {
       return session;
     },
   },
+  debug: process.env.NODE_ENV === 'development',
 };

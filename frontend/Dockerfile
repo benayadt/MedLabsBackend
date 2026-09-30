@@ -24,9 +24,14 @@ COPY package.json package-lock.json ./
 # Install production dependencies only
 RUN npm ci --omit=dev
 
-# Copy built app from builder
+# Copy built app and source from builder
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
+COPY --from=builder /app/lib ./lib
+COPY --from=builder /app/app ./app
+COPY --from=builder /app/types ./types
+COPY --from=builder /app/proxy.ts ./proxy.ts
+COPY --from=builder /app/next.config.ts ./next.config.ts
 
 # Expose port
 EXPOSE 3000
